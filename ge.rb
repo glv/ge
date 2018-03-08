@@ -7,6 +7,10 @@ module GE
     def play
       print_rules
       gather_parameters
+      puts "  players: #{players}"
+      puts "   worlds: #{worlds}"
+      puts "    turns: #{turns}"
+      puts "autobuild: #{autobuild}"
     end
 
     def prompt(text)
