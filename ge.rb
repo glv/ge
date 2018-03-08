@@ -28,7 +28,7 @@ module GE
       prompt prompt_string
       input = gets.chomp
       val = yield(input)
-      self.send("#{param}=", val)
+      send("#{param}=", val)
     rescue RuntimeError
       bell
       retry
