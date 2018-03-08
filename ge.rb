@@ -2,7 +2,7 @@
 
 module GE
   class Game
-    attr_accessor :players, :worlds, :turns, :autobuild
+    attr_reader :players, :worlds, :turns, :autobuild
 
     def play
       print_rules
@@ -28,18 +28,17 @@ module GE
       puts
     end
 
-    def get_parameter(prompt_string, param)
+    def get_parameter(prompt_string)
       prompt prompt_string
       input = gets.chomp
-      val = yield(input)
-      send("#{param}=", val)
+      yield(input)
     rescue RuntimeError
       bell
       retry
     end
 
-    def get_int_parameter(prompt_string, param, &range_validation_proc)
-      get_parameter(prompt_string, param) do |input|
+    def get_int_parameter(prompt_string, &range_validation_proc)
+      get_parameter(prompt_string) do |input|
         raise unless input =~ /^\d+$/
         input.to_i.tap{|ival| raise unless range_validation_proc.(ival) }
       end
@@ -47,20 +46,19 @@ module GE
 
     # 1890
     def gather_parameters
-      get_int_parameter("How many players (1-20)", :players) do |val|
+      @players = get_int_parameter("How many players (1-20)") do |val|
         (1..20).include?(val)
       end
 
-      get_int_parameter("How many worlds (#{players}-40)", :worlds) do |val|
+      @worlds = get_int_parameter("How many worlds (#{players}-40)") do |val|
         (players..40).include?(val)
       end
 
-      get_int_parameter("How many turns in the game (1-100).", :turns) do |val|
+      @turns = get_int_parameter("How many turns in the game (1-100).") do |val|
         (1..100).include?(val)
       end
 
-      get_parameter("Do you want the neutral worlds to build defensive ships",
-                    :autobuild) do |input|
+      @autobuild = get_parameter("Do you want the neutral worlds to build defensive ships") do |input|
         case input
         when /^Y/ then true
         when /^N/ then false
