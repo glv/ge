@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+# I'm trying to keep the code here ordered more or less as it is in
+# the original BASIC listing, to the extent that it doesn't prevent
+# writing good, idiomatic Ruby code. Where I've factored new routines
+# out of the original logic, those are placed at the bottom.
 module GE
   class Game
     attr_reader :players, :worlds, :turns, :autobuild
@@ -13,10 +17,7 @@ module GE
       puts "autobuild: #{autobuild}"
     end
 
-    def prompt(text)
-      # TODO: wrap to 40 characters
-      print text.upcase + " "
-    end
+    protected
 
     # 540
     def bell
@@ -26,22 +27,6 @@ module GE
     # 1840
     def print_rules
       puts
-    end
-
-    def get_parameter(prompt_string)
-      prompt prompt_string
-      input = gets.chomp
-      yield(input)
-    rescue RuntimeError
-      bell
-      retry
-    end
-
-    def get_int_parameter(prompt_string, &range_validation_proc)
-      get_parameter(prompt_string) do |input|
-        raise unless input =~ /^\d+$/
-        input.to_i.tap{|ival| raise unless range_validation_proc.(ival) }
-      end
     end
 
     # 1890
@@ -62,7 +47,7 @@ module GE
         case input
         when /^Y/ then true
         when /^N/ then false
-        else raise
+        else throw(:invalid)
         end
       end
     end
@@ -106,6 +91,33 @@ module GE
 
     # 3090
     def l
+    end
+
+    # New routines below here
+
+    def prompt(text)
+      # TODO: wrap to 40 characters
+      print text.upcase + " "
+    end
+
+    def get_parameter(prompt_string)
+      loop do
+        catch(:invalid) do
+          prompt prompt_string
+          input = gets.chomp
+          return yield(input)
+          bell
+        end
+      end
+    end
+
+    def get_int_parameter(prompt_string, &range_validation_proc)
+      get_parameter(prompt_string) do |input|
+        throw(:invalid) unless input =~ /^\d+$/
+        input.to_i.tap{|ival|
+          throw(:invalid) unless range_validation_proc.(ival)
+        }
+      end
     end
   end
 end
