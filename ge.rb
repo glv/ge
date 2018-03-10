@@ -22,7 +22,7 @@ module GE
 
     # 540
     def bell
-      puts ""
+      puts "\a"
     end
 
     # 1840
@@ -128,8 +128,8 @@ module GE
           prompt prompt_string
           input = gets.chomp
           return yield(input)
-          bell
         end
+        bell
       end
     end
 
