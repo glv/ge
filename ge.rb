@@ -32,19 +32,19 @@ module GE
 
     # 1890
     def gather_parameters
-      @players = get_int_parameter("How many players (1-20)") do |val|
+      @players = get_int_input("How many players (1-20)") do |val|
         (1..20).include?(val)
       end
 
-      @worlds = get_int_parameter("How many worlds (#{players}-40)") do |val|
+      @worlds = get_int_input("How many worlds (#{players}-40)") do |val|
         (players..40).include?(val)
       end
 
-      @turns = get_int_parameter("How many turns in the game (1-100).") do |val|
+      @turns = get_int_input("How many turns in the game (1-100).") do |val|
         (1..100).include?(val)
       end
 
-      @autobuild = get_bool_parameter("Do you want the neutral worlds to build defensive ships")
+      @autobuild = get_bool_input("Do you want the neutral worlds to build defensive ships")
     end
 
     # 2140
@@ -54,7 +54,7 @@ module GE
         y_coords = (1..20).to_a
         @stars = x_coords.product(y_coords).sample(worlds)
         print_star_map
-        repeat = get_bool_parameter("New setup")
+        repeat = get_bool_input("New setup")
         break unless repeat
       end
     end
@@ -74,7 +74,7 @@ module GE
         cursor_position(x*2-1, y+1)
         print i+1
       end
-      cursor_position(1, 21)
+      cursor_position(1, 22)
     end
 
     # These are all as-yet-unnamed procs that are the targets of GOSUBs
@@ -122,7 +122,7 @@ module GE
     # input to a block for validation and format conversion.
     # The block must either return the validated parameter value
     # or throw(:invalid).
-    def get_parameter(prompt_string)
+    def get_input(prompt_string)
       loop do
         catch(:invalid) do
           prompt prompt_string
@@ -137,8 +137,8 @@ module GE
     # the integer to a block for range validation; the block
     # must return a truthy value if the parameter is valid,
     # false otherwise.
-    def get_int_parameter(prompt_string, &range_validation_proc)
-      get_parameter(prompt_string) do |input|
+    def get_int_input(prompt_string, &range_validation_proc)
+      get_input(prompt_string) do |input|
         throw(:invalid) unless input =~ /^\d+$/
         input.to_i.tap{|ival|
           throw(:invalid) unless range_validation_proc.(ival)
@@ -146,8 +146,8 @@ module GE
       end
     end
 
-    def get_bool_parameter(prompt_string)
-      get_parameter(prompt_string) do |input|
+    def get_bool_input(prompt_string)
+      get_input(prompt_string) do |input|
         case input
         when /^Y/ then true
         when /^N/ then false
