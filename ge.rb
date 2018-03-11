@@ -66,7 +66,6 @@ module GE
     # the fact that I could say the same thing. Well, here goes
     # nuthin'.
     def print_star_map
-      # TODO: what does "CALL  - 936" do? (I'm guessing clear the screen)
       clear_screen
       cursor_position(1, 1)
       print "*******STAR MAP*******"
