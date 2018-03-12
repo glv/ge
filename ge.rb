@@ -9,7 +9,7 @@ module GE
     attr_reader :players, :worlds, :turns       # integers
     attr_reader :autobuild                      # booleans
     attr_reader :player_worlds, :extra_worlds   # ranges
-    attr_reader :stars, :industries, :controls  # arrays
+    attr_reader :stars, :industries, :controls, :ships  # arrays
 
     def play
       print_rules
@@ -22,6 +22,7 @@ module GE
       generate_industries
       set_initial_world_control
       build_ships
+      print_star_locations
     end
 
     protected
@@ -97,23 +98,43 @@ module GE
 
     # 2510
     def build_ships
+      @ships = []
       player_worlds.each do |pw|
-        denom = extra_worlds.map{|ew| 100 / (distance(pw, ew) + 2)}.sum
+        denom = extra_worlds.map{|ew| 100 / (distance(pw, ew) + 2)}.inject(0){|accum, n| accum + n }
         ships[pw] = worlds * (5 + 400/denom)
       end
       extra_worlds.each do |ew|
-        # TODO: something weird here ... on line 2640, it looks like a
-        # third of the time (randomly) it will repeat this step for
-        # the current star. Am I reading that correctly?
-        ships[ew] += rand(0...industries[ew]) + 3
+        ships[ew] = 0
+        # about a third of the extra worlds should get an extra ship allocation
+        allocations = rand(3) == 0 ? 2 : 1
+        allocations.times{ ships[ew] += rand(0...industries[ew]) + 3 }
       end
     end
 
-    # These are all as-yet-unnamed procs that are the targets of GOSUBs
-
     # 2680
-    def h
+    def print_star_locations
+      clear_screen
+      cursor_position(1, 1)
+      print "WORLD  X   Y"
+      cursor_position(21, 1)
+      print "WORLD  X   Y"
+      puts
+      col_division = (worlds + 1) / 2
+      stars.each_with_index do |(x, y), i|
+        row = (i % col_division) + 2
+        col = (i / col_division) * 21
+        cursor_position(col, row)
+        print "%2d     %2d  %2d" % [i, x, y]
+        # puts "col: #{col}, row: #{row}"
+      end
+      cursor_position(1, col_division + 2)
+      puts "PREPARE YOUR STRMAP USING THE ABOVE"
+      puts "DATA. ON A SHEET OF GRAPH PAPER MAKE A"
+      puts "20X20 GRID WITH 0,0 IN THE UPPER LEFT."
+      get_input("TYPE GO WHEN YOU ARE FINISHED"){true}
     end
+
+    # These are all as-yet-unnamed procs that are the targets of GOSUBs
 
     # 3200
     def i
