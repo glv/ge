@@ -6,11 +6,22 @@
 # out of the original logic, those are placed at the bottom.
 module GE
   class Game
+    # game configuration info (does not change after game starts)
     attr_reader :players, :worlds, :turns       # integers
     attr_reader :autobuild                      # booleans
     attr_reader :player_worlds, :extra_worlds   # ranges
     attr_reader :stars, :industries, :controls, :ships  # arrays
 
+    # game tracking info (changes each turn)
+    attr_reader :turn
+
+    # 50-220
+    def initialize
+      @turn = 0
+      @ships = []
+    end
+
+    # 230-510
     def play
       print_rules
       gather_parameters
@@ -23,21 +34,55 @@ module GE
       set_initial_world_control
       build_ships
       print_star_locations
+      print_world_data
+      begin
+        turn += 1
+        fleet_orders
+        build_new_ships
+        move_fleets
+        print_world_data
+      end while turn < turns
+      # TODO: wrapup
     end
 
     protected
 
-    # 540
-    def bell
+    # 540-630
+    def bell # illegal input
       puts "\a"
     end
 
-    # 1840
+    # other sounds:
+    # 650-700 defender's fire
+    # 720-770 hit
+
+    # 790-1220
+    def combat_subroutine
+      # TODO:
+    end
+
+    # 1240-1690
+    def fleet_order_input
+      # TODO:
+    end
+
+    # 1710-1750
+    def chartr_input
+      # TODO:
+    end
+
+    # 1770-1820
+    def distance(w1, w2)
+      radicand = (stars[w1][0] - stars[w2][0]) ** 2 + (stars[w1][1] - stars[w2][1]) ** 2
+      Math.sqrt(radicand).to_i
+    end
+
+    # 1840-1870
     def print_rules
       puts
     end
 
-    # 1890
+    # 1890-2120
     def gather_parameters
       @players = get_int_input("How many players (1-20)") do |val|
         (1..20).include?(val)
@@ -56,7 +101,7 @@ module GE
       @autobuild = get_bool_input("Do you want the neutral worlds to build defensive ships")
     end
 
-    # 2140
+    # 2140-2360 (including print_star_map)
     def generate_star_locations
       loop do
         x_coords = (1..20).to_a
@@ -68,7 +113,7 @@ module GE
       end
     end
 
-    # 2240
+    # 2240-2360
     # Rob Pike's bio (http://herpolhode.com/rob/) states that he "has
     # never written a program that uses cursor addressing". While not
     # as proud of it as he apparently is, I've always been pleased by
@@ -85,20 +130,19 @@ module GE
       cursor_position(1, 22)
     end
 
-    # 2380
+    # 2380-2440
     def generate_industries
       @industries = Array.new(players, 10) # player worlds
       @industries += (extra_worlds).map{rand(1..5)} # neutral worlds
     end
 
-    # 2460
+    # 2460-2490
     def set_initial_world_control
-      @controls = player_worlds.to_a
+      @controls = player_worlds.to_a + extra_worlds.collect{0}
     end
 
-    # 2510
+    # 2510-2660
     def build_ships
-      @ships = []
       player_worlds.each do |pw|
         denom = extra_worlds.map{|ew| 100 / (distance(pw, ew) + 2)}.inject(0){|accum, n| accum + n }
         ships[pw] = worlds * (5 + 400/denom)
@@ -111,7 +155,7 @@ module GE
       end
     end
 
-    # 2680
+    # 2680-2810
     def print_star_locations
       clear_screen
       cursor_position(1, 1)
@@ -134,22 +178,45 @@ module GE
       get_input("TYPE GO WHEN YOU ARE FINISHED"){true}
     end
 
-    # These are all as-yet-unnamed procs that are the targets of GOSUBs
-
-    # 3200
-    def i
+    # 2830-3000
+    def fleet_orders
+      players.times do |i|
+        fleet_order_input
+      end
     end
 
-    # 2830
-    def j
+    # 3020-3070
+    def build_new_ships
+      # TODO:
     end
 
-    # 3020
-    def k
+    # 3090-3180
+    def move_fleets
+      # TODO:
     end
 
-    # 3090
-    def l
+    # 3200-3340
+    def print_world_data
+      clear_screen
+      cursor_position(1, 1)
+      print "RESULTS FOR TURN #{turn}"
+      cursor_position(1, 2)
+      print "WRLD CONT PROD SHPS WRLD CONT PROD SHP"
+      col_division = (worlds + 1) / 2
+      worlds.times do |i|
+        world = i+1
+        row = (i % col_division) + 3
+        col = (i / col_division) * 21
+        cursor_position(col, row)
+        print "%2d    %2d" % [world, controls[i]]
+        if controls[i] != 0
+          cursor_position(col+11, row)
+          print industries[i]
+          cursor_position(col+16, row)
+          print ships[i]
+        end
+      end
+      cursor_position(1, col_division + 3)
     end
 
     # New routines below here
@@ -203,11 +270,6 @@ module GE
 
     def cursor_position(x, y)
       print "\e[#{y};#{x}H"
-    end
-
-    def distance(w1, w2)
-      radicand = (stars[w1][0] - stars[w2][0]) ** 2 + (stars[w1][1] - stars[w2][1]) ** 2
-      Math.sqrt(radicand).to_i
     end
   end
 end
